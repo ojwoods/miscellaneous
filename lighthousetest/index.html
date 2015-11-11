@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="user-scalable=no,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="viewport" content="width=device-width">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+        <title>Lighthouse Learning Technical Test.</title>
+
+        <link href="assets/lighthouseStyles.css" rel="stylesheet" type="text/css" />
+
+        <script type="text/javascript" src="easeljs/utils/UID.js"></script>
+        <script type="text/javascript" src="easeljs/geom/Matrix2D.js"></script>
+        <script type="text/javascript" src="easeljs/events/EventDispatcher.js"></script>
+        <script type="text/javascript" src="easeljs/display/DisplayObject.js"></script>
+        <script type="text/javascript" src="easeljs/display/Container.js"></script>
+        <script type="text/javascript" src="easeljs/display/Stage.js"></script>
+        <script type="text/javascript" src="easeljs/events/MouseEvent.js"></script>
+        <script type="text/javascript" src="easeljs/display/Bitmap.js"></script>
+        <script type="text/javascript" src="easeljs/geom/Rectangle.js"></script>
+        <script type="text/javascript" src="easeljs/filters/Filter.js"></script>
+        <script type="text/javascript" src="easeljs/filters/ColorFilter.js"></script>
+        <script type="text/javascript" src="easeljs/filters/AlphaMaskFilter.js"></script>
+        <script type="text/javascript" src="easeljs/display/Shape.js"></script>
+        <script type="text/javascript" src="easeljs/display/Graphics.js"></script>
+        <script type="text/javascript" src="easeljs/ui/Touch.js"></script>
+
+        <script>
+            /*
+             * Lighthouse Learning Technical Test
+             * 
+             * Author: Oliver Woods 
+             */
+            
+            var MAX_IMAGES= 11;
+            var TEAL_RGB = "#338080";
+            var BLUE_RGB = "#0000ff";
+            var YELLOW_RGB = "#ffff00";
+            
+            var lighthouseImage;
+            var beamImage;
+            var rockImage;
+
+            var lightHouseAlphaFilter;
+            var beamAlphaFilter;
+            var rockAlphaFilter;
+            
+            var skyShape;
+            var seaShape;
+            
+            var tealBrushImage;
+            var blueBrushImage;
+            var yellowBrushImage;
+            
+            var tealButtonImage;
+            var yellowButtonImage;
+            var blueButtonImage;
+            
+            var currentCursorImage;
+            var currentColor;
+
+            var currentColorImage;
+            
+            
+            var cursorBitmap;
+            
+            var tealColorFilter;
+            var yellowColorFilter;
+            var blueColorFilter;
+            var highlightFilter;
+            
+            var currentBrushFilter;
+            var currentBrushRGB;
+            var numberOfImagesLoaded = 0;
+        
+            var is_safari_or_uiwebview;
+            
+            /*
+             * Initialise variables
+             */
+            function init() {
+                is_safari_or_uiwebview = /(iPhone|iPod|iPad).*AppleWebKit/i.test(navigator.userAgent);
+                
+                lighthouseImage = new Image();
+                lighthouseImage.onload = handleImageLoad;
+                lighthouseImage.src = "assets/lighthouse2.png";
+                
+                beamImage = new Image();
+                beamImage.onload = handleImageLoad;
+                beamImage.src = "assets/beam.png";
+                
+                rockImage = new Image();
+                rockImage.onload = handleImageLoad;
+                rockImage.src = "assets/rock.png";
+
+                tealBrushImage = new Image();
+                tealBrushImage.onload = handleImageLoad;
+                tealBrushImage.src = "assets/brush_teal.png";                
+                tealButtonImage = new Image();
+                tealButtonImage.onload = handleImageLoad;
+                tealButtonImage.src = "assets/button_teal.png";
+                
+                blueBrushImage = new Image();
+                blueBrushImage.onload = handleImageLoad;
+                blueBrushImage.src = "assets/brush_blue.png";
+                blueButtonImage = new Image();
+                blueButtonImage.onload = handleImageLoad;
+                blueButtonImage.src = "assets/button_blue.png";
+                
+                yellowBrushImage = new Image();
+                yellowBrushImage.onload = handleImageLoad;
+                yellowBrushImage.src = "assets/brush_yellow.png";
+                yellowButtonImage = new Image();
+                yellowButtonImage.onload = handleImageLoad;
+                yellowButtonImage.src = "assets/button_yellow.png";
+                
+                handImage = new Image();
+                handImage.onload = handleImageLoad;
+                handImage.src = "assets/hand.png";
+                
+                currentColorImage = new Image();
+                currentColorImage.onload = handleImageLoad;
+                currentColorImage.src = "assets/palette.png";
+                                
+                tealColorFilter=new createjs.ColorFilter(0.2, 0.5, 0.5, 1, 0, 0, 0);
+                yellowColorFilter=new createjs.ColorFilter(1, 1, 0, 1, 0, 0, 0);
+                blueColorFilter=new createjs.ColorFilter(0, 0, 1, 1, 0, 0, 0);
+                highlightFilter=new createjs.ColorFilter(0.0, 0, 0, 1, 00,0, 0,0);
+                currentBrushFilter=tealColorFilter;
+            }
+        
+            /*
+             * Do not start the game until all images are loaded
+             */
+            function handleImageLoad(e) {
+                numberOfImagesLoaded++;
+ 
+                if (numberOfImagesLoaded == MAX_IMAGES) {
+                    numberOfImagesLoaded = 0;
+                    startGame();
+                }
+            }
+            
+            /*
+             * Quick and easy way to show an element is highlighted:
+             * On mouseover, scale it slightly to show user interaction 
+             */
+            function rollOverEvent(evt) {
+                evt.target.scaleX=1.01;
+                evt.target.scaleY=1.01;
+                stage.update();
+            }
+            /*             
+             * Reset element scale after the mouse exits
+             */
+            function rollOutEvent(evt) {
+                evt.target.scaleX=1.0;
+                evt.target.scaleY=1.0;
+                stage.update();
+            }
+                
+            /*
+             * 
+             * Main function
+             * 
+             */
+            function startGame() {
+                //find canvas
+                var canvas = document.getElementById("gameCanvas");
+
+                // create a new stage and point it at our canvas:
+                stage = new createjs.Stage(canvas);
+                stage.enableMouseOver();
+                stage.autoClear = false;
+                createjs.Touch.enable(stage);
+                
+                /*
+                 * Create the sky, just a rectangle
+                 */                                             
+                skyShape = new createjs.Shape();
+                skyShape.graphics.beginFill("#00aaff").drawRect(0, 0, 960, 350);
+                skyShape.graphics.endFill();
+                skyShape.onPress = function(evt) {
+                    skyShape.graphics.beginFill(currentBrushRGB).drawRect(0, 0, 960, 350);
+                    skyShape.graphics.endFill();
+                    stage.update();
+                };
+                stage.addChild(skyShape);
+                 
+                 
+                /*
+                 * Create the sea, just a rectangle
+                 */
+                seaShape = new createjs.Shape();
+                seaShape.graphics.beginFill("#2222ff").drawRect(0, 350, 960, 230);
+                seaShape.graphics.endFill();
+                seaShape.onPress = function(evt) {
+                    seaShape.graphics.beginFill(currentBrushRGB).drawRect(0, 350, 960, 230);
+                    seaShape.graphics.endFill();
+                    stage.update();
+                };
+                stage.addChild(seaShape);
+
+                
+                /*
+                 * Create the lighthouse
+                 */
+                var lighthouseBitmap = new createjs.Bitmap(lighthouseImage);	              
+                lighthouseBitmap.x=400;
+                lighthouseBitmap.y=40;
+                lightHouseAlphaFilter = new createjs.AlphaMaskFilter(lighthouseBitmap.image);
+                
+                /* 
+                 * If the mouse clicks on the lighthouse, use a color filter to change the image color
+                 * and an alpha filter to make sure the alpha does not change colour as well
+                 */
+                lighthouseBitmap.onPress = function(evt) {
+                    evt.target.filters = [currentBrushFilter, lightHouseAlphaFilter];
+                    evt.target.cache(0,0,lighthouseImage.width,lighthouseImage.height);
+                    stage.update();
+                };
+                lighthouseBitmap.onMouseOver=rollOverEvent;
+                lighthouseBitmap.onMouseOut=rollOutEvent;                
+                stage.addChild(lighthouseBitmap);
+                
+                /*
+                 * Create the beam of light
+                 */
+                var beamBitmap = new createjs.Bitmap(beamImage);	              
+                beamBitmap.x=530;
+                beamBitmap.y=0;
+                beamAlphaFilter = new createjs.AlphaMaskFilter(beamBitmap.image);
+                
+                /* 
+                 * If the mouse clicks on the beam, use a color filter to change the image color
+                 * and an alpha filter to make sure the alpha doe not change colour as well
+                 */
+                beamBitmap.onPress = function(evt) {
+                    evt.target.filters = [currentBrushFilter, beamAlphaFilter];
+                    evt.target.cache(0,0,beamImage.width,beamImage.height); 
+                    stage.update();
+                };
+                beamBitmap.onMouseOver=rollOverEvent;
+                beamBitmap.onMouseOut=rollOutEvent;
+                stage.addChild(beamBitmap);
+                
+                
+                /*
+                 * Create the rock
+                 */
+                var rockBitmap = new createjs.Bitmap(rockImage);	              
+                rockBitmap.x=300;
+                rockBitmap.y=300;
+                rockAlphaFilter = new createjs.AlphaMaskFilter(rockBitmap.image);
+                
+                /* 
+                 * If the mouse clicks on the rock, use a color filter to change the image color
+                 * and an alpha filter to make sure the alpha doe not change colour as well
+                 */
+                rockBitmap.onPress = function(evt) {
+                    evt.target.filters = [currentBrushFilter, rockAlphaFilter];
+                    evt.target.cache(0,0,rockImage.width,rockImage.height);
+                    stage.update();
+                };
+                rockBitmap.onMouseOver=rollOverEvent;
+                rockBitmap.onMouseOut=rollOutEvent;
+                stage.addChild(rockBitmap);
+
+                 
+                /*
+                 * Create the brushes that we use to select the colour               
+                 */
+                
+                /*
+                 *  Teal brush
+                 */
+                var tealButtonBitmap = new createjs.Bitmap(tealButtonImage);	              
+                tealButtonBitmap.x=10;
+                tealButtonBitmap.y=120;
+                
+                // if the brush is selected, make sure we change the cursor to reflect the new brush
+                tealButtonBitmap.onPress = function(evt) {
+                    currentBrushFilter=tealColorFilter;
+                    currentCursorImage=tealBrushImage;
+                    cursorBitmap.image  = currentCursorImage;
+                    currentColor.filters = [currentBrushFilter];
+                    currentColor.cache(0,0,currentColorImage.width,currentColorImage.height);
+                    currentBrushRGB=TEAL_RGB;
+                    stage.update();
+                };
+                tealButtonBitmap.onMouseOver= function(evt) {
+                    cursorBitmap.image  = handImage;
+                    rollOverEvent(evt);
+                };
+                tealButtonBitmap.onMouseOut= function(evt) {
+                    cursorBitmap.image  = tealBrushImage;
+                    cursorBitmap.image  = currentCursorImage;
+                    rollOutEvent(evt);
+                };
+                stage.addChild(tealButtonBitmap);
+		
+                /*
+                 * Yellow brush
+                 */ 
+                var yellowButtonBitmap = new createjs.Bitmap(yellowButtonImage);	              
+                yellowButtonBitmap.x=10;
+                yellowButtonBitmap.y=240;
+
+                // if the brush is selected, make sure we change the cursor to reflect the new brush
+                yellowButtonBitmap.onPress = function(evt) {
+                    currentBrushFilter=yellowColorFilter;
+                    currentCursorImage=yellowBrushImage;
+                    cursorBitmap.image  = currentCursorImage;
+                    currentColor.filters = [currentBrushFilter];
+                    currentColor.cache(0,0,currentColorImage.width,currentColorImage.height);
+                    currentBrushRGB=YELLOW_RGB;
+                    stage.update();
+                };
+                yellowButtonBitmap.onMouseOver= function(evt) {
+                    cursorBitmap.image  = handImage;
+                    rollOverEvent(evt);
+                };
+                yellowButtonBitmap.onMouseOut= function(evt) {
+                    cursorBitmap.image  = yellowBrushImage;
+                    cursorBitmap.image  = currentCursorImage;
+                    rollOutEvent(evt);
+                };
+                
+                stage.addChild(yellowButtonBitmap);                
+                
+                /*
+                 * Blue brush
+                 */ 
+                var blueButtonBitmap = new createjs.Bitmap(blueButtonImage);	              
+                blueButtonBitmap.x=10;
+                blueButtonBitmap.y=360;
+
+                // if the brush is selected, make sure we change the cursor to reflect the new brush
+                blueButtonBitmap.onPress = function(evt) {
+                    currentBrushFilter=blueColorFilter;
+                    currentCursorImage=blueBrushImage;
+                    cursorBitmap.image  = currentCursorImage;
+                    currentColor.filters = [currentBrushFilter];
+                    currentColor.cache(0,0,currentColorImage.width,currentColorImage.height);
+                    currentBrushRGB=BLUE_RGB;
+                    stage.update();
+                };
+                
+                blueButtonBitmap.onMouseOver= function(evt) {
+                    cursorBitmap.image  = handImage;
+                    rollOverEvent(evt);
+                };
+                
+                blueButtonBitmap.onMouseOut= function(evt) {
+                    cursorBitmap.image  = currentCursorImage;
+                    rollOutEvent(evt);
+                };            
+                stage.addChild(blueButtonBitmap);                
+
+                /*
+                 * Current Color
+                 */ 
+                currentColor = new createjs.Bitmap(currentColorImage);	              
+                currentColor.x=10;
+                currentColor.y=10;
+
+                stage.addChild(currentColor);                
+
+                /*
+                 * Set up default color
+                 */                
+                currentCursorImage=tealBrushImage;// default
+                currentBrushRGB=TEAL_RGB;
+                currentColor.filters = [currentBrushFilter];
+                currentColor.cache(0,0,currentColorImage.width,currentColorImage.height);
+          
+                /*
+                 * Set up the cursor, which replaces the default mouse image
+                 */
+          
+                cursorBitmap = new createjs.Bitmap(currentCursorImage);
+                if(!is_safari_or_uiwebview)
+                {
+                    stage.addChild(cursorBitmap);
+                    stage.onMouseMove = function(evt) {	
+                        var offsetX=0;
+                        var offsetY=0;
+                    
+                        offsetX = cursorBitmap.image.width/2;   
+                        offsetY = cursorBitmap.image.height/2; 
+
+                        cursorBitmap.x = evt.stageX-offsetX;
+                        cursorBitmap.y = evt.stageY-offsetY;
+                        stage.update();
+                    };
+                }
+                                
+                // draw to the canvas:
+                stage.update();
+            }
+
+        </script>
+    </head>
+
+    <body onload="init();">
+        <header id="header">
+            <h1><span class="text-product">Lighthouse Learning Technical Test - Customisable Lighthouse
+            </h1>
+        </header>
+
+        <div id="canvasHolder">
+            <canvas id="gameCanvas" width="960" height="480">You need a modern browser to use this test</canvas>
+        </div>
+    </body>
+</html>
