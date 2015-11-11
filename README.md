@@ -8,6 +8,7 @@ This was a (successful) technical test for a lead Javascript developer position.
 
 #WordSorter
 Another (successful) technical test for a Java development position. Requirement:
+
 Write a Java application which takes any number of words as command line arguments and outputs unique words (ignoring case) in ascending length and then alphabetical order (where lengths are the same).
 
 The original case should be preserved and the outputted words should be comma separated.
